@@ -45,7 +45,7 @@ export async function handleAdminUI(request, env, sys) {
             </div>
           </td>
           <td><span class="group-tag">${s.server_group || 'Default'}</span></td>
-          <td><span class="price-tag">${s.price || ''}</span></td>
+          <td><span class="price-tag">${s.price || '-'}</span></td>
           <td><span class="date-text">${s.expire_date || '-'}</span></td>
           <td><span class="spec-text">${s.bandwidth || '-'}</span></td>
           <td><span class="spec-text">${s.traffic_limit || '-'}</span></td>
@@ -862,7 +862,7 @@ export async function handleAdminUI(request, env, sys) {
       <div id="tab-servers" class="tab-content active">
         <div class="alert alert-info">
           <span class="alert-icon">[i]</span>
-          <span>点击 <strong>📋</strong> 复制安装命令，在目标服务器上执行 <code style="background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:3px;">$ bash install.sh</code> 即可完成探针部署 后面跟一个上报间隔参数，单位为秒</span>
+          <span>点击 <strong>📋</strong> 复制安装命令，在目标服务器上执行，即可完成探针部署。后面跟一个上报间隔参数，单位为秒</span>
         </div>
         
         <div class="toolbar">
@@ -1271,7 +1271,7 @@ export async function handleAdminUI(request, env, sys) {
     function openEditModal(id, group, price, expire, bw, traffic, hidden) {
       document.getElementById('editId').value = id;
       document.getElementById('editGroup').value = group || 'Default';
-      document.getElementById('editPrice').value = price || '免费';
+      document.getElementById('editPrice').value = price || '';
       document.getElementById('editExpire').value = expire || '';
       document.getElementById('editBandwidth').value = bw || '';
       document.getElementById('editTraffic').value = traffic || '';

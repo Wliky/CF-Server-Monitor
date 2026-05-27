@@ -23,7 +23,7 @@ export async function handleAdminAPI(request, env, sys) {
       // 添加新服务器
       const id = crypto.randomUUID();
       const name = data.name || 'New Server';
-      const group = data.server_group || '默认分组';
+      const group = data.server_group || 'Default';
       
       await env.DB.prepare(`
         INSERT INTO servers 
@@ -38,7 +38,7 @@ export async function handleAdminAPI(request, env, sys) {
                 '0', '0', '0', '0', '0', 
                 '', '', '', '', '0', '0', '0', 
                 '0', '0', '0', '0', '0', 
-                'XX', '0', '0', ?, '免费', '', 
+                'XX', '0', '0', ?, '', '', 
                 '', '', '0', '0', '0', '0', 
                 '0', '0', '0', '0', '')
       `).bind(id, name, group).run();
@@ -84,8 +84,8 @@ export async function handleAdminAPI(request, env, sys) {
         SET server_group = ?, price = ?, expire_date = ?, bandwidth = ?, traffic_limit = ?, is_hidden = ? 
         WHERE id = ?
       `).bind(
-        server_group || '默认分组', 
-        price || '免费', 
+        server_group || 'Default', 
+        price || '', 
         expire_date || '', 
         bandwidth || '', 
         traffic_limit || '',

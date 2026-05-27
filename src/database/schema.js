@@ -40,7 +40,7 @@ export async function initDatabase(db) {
         country TEXT DEFAULT 'XX',
         ip_v4 TEXT DEFAULT '0',
         ip_v6 TEXT DEFAULT '0',
-        server_group TEXT DEFAULT '默认分组',
+        server_group TEXT DEFAULT 'Default',
         price TEXT DEFAULT '',
         expire_date TEXT DEFAULT '',
         bandwidth TEXT DEFAULT '',

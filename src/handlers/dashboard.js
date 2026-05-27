@@ -142,7 +142,7 @@ export async function handleDashboard(request, env, sys) {
       globalNetRx += rx_val;
 
       // 分组
-      const grpName = server.server_group || '默认分组';
+      const grpName = server.server_group || 'Default';
       if (!groups[grpName]) groups[grpName] = [];
       groups[grpName].push(server);
 
@@ -199,8 +199,8 @@ export async function handleDashboard(request, env, sys) {
         
         // 元数据
         let metaHtml = '';
-        if (sys.show_price === 'true') {
-          metaHtml += `<div class="card-meta">💰 ${server.price || '免费'}</div>`;
+        if (sys.show_price === 'true' && server.price) {
+          metaHtml += `<div class="card-meta">💰 ${server.price}</div>`;
         }
         if (sys.show_expire === 'true') {
           let expireText = '永久';
@@ -1054,7 +1054,7 @@ export async function handleDashboard(request, env, sys) {
     function renderCards(servers, now) {
       const groups = {};
       for (const server of servers) {
-        const grpName = server.server_group || '默认分组';
+        const grpName = server.server_group || 'Default';
         if (!groups[grpName]) groups[grpName] = [];
         groups[grpName].push(server);
       }
@@ -1089,8 +1089,8 @@ export async function handleDashboard(request, env, sys) {
             : '🏳️';
           
           let metaHtml = '';
-          if (sysConfig.show_price) {
-            metaHtml += '<div class="card-meta">💰 ' + (server.price || '免费') + '</div>';
+          if (sysConfig.show_price && server.price) {
+            metaHtml += '<div class="card-meta">💰 ' + server.price + '</div>';
           }
           if (sysConfig.show_expire) {
             let expireText = '永久';
