@@ -182,10 +182,7 @@ export async function handleAdminAPI(request, env, sys) {
         return createSuccessResponse({ 
           success: true, 
           token: token,
-          message: {
-            en: 'Login successful',
-            zh: '登录成功'
-          }
+          message: 'loginSuccessful'
         });
       } catch (e) {
         return createErrorResponse(e);
@@ -325,10 +322,7 @@ export async function handleAdminAPI(request, env, sys) {
       clearSiteSettingsCache();
       return createSuccessResponse({ 
         success: true, 
-        message: {
-          en: 'Update Success',
-          zh: '更新成功'
-        }
+        message: 'updateSuccess'
       });
     } 
     else if (data.action === 'add') {
@@ -354,10 +348,7 @@ export async function handleAdminAPI(request, env, sys) {
       return createSuccessResponse({ 
         success: true, 
         id: id,
-        message: {
-          en: `Server "${name}" added`,
-          zh: `服务器 "${name}" 已添加`
-        }
+        message: 'serverAdded'
       });
     } 
     else if (data.action === 'delete') {
@@ -374,10 +365,7 @@ export async function handleAdminAPI(request, env, sys) {
       
       return createSuccessResponse({ 
         success: true, 
-        message: {
-          en: 'Server deleted',
-          zh: '服务器已删除'
-        }
+        message: 'serverDeleted'
       });
     } 
     else if (data.action === 'save_order') {
@@ -397,10 +385,7 @@ export async function handleAdminAPI(request, env, sys) {
       
       return createSuccessResponse({ 
         success: true, 
-        message: {
-          en: 'Sort order saved',
-          zh: '排序已保存'
-        }
+        message: 'sortOrderSaved'
       });
     }
     else if (data.action === 'edit') {
@@ -458,10 +443,7 @@ export async function handleAdminAPI(request, env, sys) {
       
       return createSuccessResponse({ 
         success: true, 
-        message: {
-          en: 'Server updated',
-          zh: '服务器信息已更新'
-        }
+        message: 'serverUpdated'
       });
     }
     else if (data.action === 'batch_delete') {
@@ -487,10 +469,7 @@ export async function handleAdminAPI(request, env, sys) {
       
       return createSuccessResponse({ 
         success: true, 
-        message: {
-          en: `${ids.length} server(s) deleted`,
-          zh: `已删除 ${ids.length} 台服务器`
-        }
+        message: 'batchDeleted'
       });
     }
     

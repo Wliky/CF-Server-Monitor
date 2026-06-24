@@ -239,7 +239,18 @@ const translations = reactive({
     secondsAgo: 'secs ago',
     minutesAgo: 'mins ago',
     hoursAgo: 'hurs ago',
-    daysAgo: 'days ago'
+    daysAgo: 'days ago',
+    loginSuccessful: 'Login successful',
+    updateSuccess: 'Update Success',
+    serverAdded: 'Server added',
+    serverDeleted: 'Server deleted',
+    sortOrderSaved: 'Sort order saved',
+    serverUpdated: 'Server updated',
+    batchDeleted: 'Servers deleted',
+    databaseRebuiltSuccess: 'Database rebuilt successfully',
+    databaseRebuiltFailed: 'Database rebuild failed',
+    databaseUpgradeSuccess: 'Database upgrade successful',
+    databaseUpgradeFailed: 'Database upgrade failed'
   },
   zh: {
     theme: '主题',
@@ -478,7 +489,18 @@ const translations = reactive({
     secondsAgo: '秒前',
     minutesAgo: '分钟前',
     hoursAgo: '小时前',
-    daysAgo: '天前'
+    daysAgo: '天前',
+    loginSuccessful: '登录成功',
+    updateSuccess: '更新成功',
+    serverAdded: '服务器已添加',
+    serverDeleted: '服务器已删除',
+    sortOrderSaved: '排序已保存',
+    serverUpdated: '服务器信息已更新',
+    batchDeleted: '已删除服务器',
+    databaseRebuiltSuccess: '数据库重建成功',
+    databaseRebuiltFailed: '数据库重建失败',
+    databaseUpgradeSuccess: '数据库更新成功',
+    databaseUpgradeFailed: '数据库更新失败'
   }
 })
 

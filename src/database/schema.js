@@ -121,19 +121,13 @@ export async function rebuildDatabase(db) {
     
     return {
       success: true,
-      message: {
-        en: 'Database rebuilt successfully',
-        zh: '数据库重建成功'
-      }
+      message: 'databaseRebuiltSuccess'
     };
   } catch (e) {
     console.error('❌ 数据库重建失败:', e);
     return {
       success: false,
-      message: {
-        en: 'Database rebuild failed',
-        zh: '数据库重建失败'
-      },
+      message: 'databaseRebuiltFailed',
       error: e.message
     };
   }

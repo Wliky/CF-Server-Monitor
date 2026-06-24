@@ -28,14 +28,14 @@ export async function updateDatabase(db) {
     
     return {
       success: true,
-      message: '数据库更新成功',
+      message: 'databaseUpgradeSuccess',
       results
     };
   } catch (e) {
     console.error('❌ 数据库更新失败:', e);
     return {
       success: false,
-      message: '数据库更新失败',
+      message: 'databaseUpgradeFailed',
       error: e.message,
       results
     };

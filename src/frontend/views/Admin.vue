@@ -842,9 +842,9 @@ import { http } from '../utils/http'
 const trans = computed(() => translations[currentLang.value] || translations.en)
 
 const getMessage = (msg) => {
-  if (typeof msg === 'string') return msg
-  if (typeof msg === 'object' && msg !== null) {
-    return msg[currentLang.value] || msg.en || Object.values(msg)[0] || ''
+  if (typeof msg === 'string') {
+    const translated = t(msg)
+    return translated !== msg ? translated : msg
   }
   return ''
 }
