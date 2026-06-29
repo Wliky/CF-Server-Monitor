@@ -37,10 +37,13 @@ export class MetricsBroadcaster {
     );
   }
 
-  // 根据 scope 判断是否需要接收某台服务器的更新
-  _shouldDeliver(sessionScope, serverId) {
+  // 根据 scope 和 serverIds 判断是否需要接收某台服务器的更新
+  _shouldDeliver(sessionScope, serverId, serverIds) {
     if (!sessionScope) return false;
-    if (sessionScope === 'all') return true;
+    if (sessionScope === 'all') {
+      if (!serverIds || serverIds.length === 0) return false;
+      return serverIds.includes(serverId);
+    }
     return sessionScope === serverId;
   }
 
@@ -68,6 +71,12 @@ export class MetricsBroadcaster {
       const raw = url.searchParams.get('subscribe') || 'all';
       const scope = raw.trim().toLowerCase();
 
+      // 解析客户端传入的 server IDs 用于过滤
+      const idsParam = url.searchParams.get('ids') || '';
+      const serverIds = idsParam
+        ? idsParam.split(',').map(id => id.trim()).filter(id => id.length > 0)
+        : [];
+
       // @ts-ignore - Cloudflare Workers 运行时提供 WebSocketPair
       const pair = new WebSocketPair();
       const [client, server] = Object.values(pair);
@@ -75,8 +84,8 @@ export class MetricsBroadcaster {
       // 使用 DO WebSocket Hibernation API 接管连接
       this.state.acceptWebSocket(server);
 
-      // 将订阅 scope 附加到 WebSocket（休眠后仍保留）
-      server.serializeAttachment({ scope });
+      // 将订阅 scope 和 serverIds 附加到 WebSocket（休眠后仍保留）
+      server.serializeAttachment({ scope, serverIds });
 
       // 立即发送 hello 让客户端确认连接成功
       try {
@@ -192,7 +201,7 @@ export class MetricsBroadcaster {
     const websockets = this.state.getWebSockets();
     for (const ws of websockets) {
       const attachment = ws.deserializeAttachment();
-      if (!attachment || !this._shouldDeliver(attachment.scope, serverId)) {
+      if (!attachment || !this._shouldDeliver(attachment.scope, serverId, attachment.serverIds)) {
         continue;
       }
       try {
@@ -235,7 +244,7 @@ export class MetricsBroadcaster {
       const attachment = ws.deserializeAttachment();
       if (!attachment) continue;
 
-      const scopedUpdates = updates.filter(item => this._shouldDeliver(attachment.scope, item.serverId));
+      const scopedUpdates = updates.filter(item => this._shouldDeliver(attachment.scope, item.serverId, attachment.serverIds));
       if (scopedUpdates.length === 0) continue;
 
       const only = scopedUpdates.length === 1 ? scopedUpdates[0] : null;

@@ -569,20 +569,32 @@ let timeUpdateInterval = null
 const startLiveSocket = () => {
   const bases = getApiBases()
 
+  // 按 source 分组，每个 apiBase 只传自己的 server IDs
+  const idsByIndex = new Map()
+  for (const s of servers.value) {
+    if (!s.id || !s.source) continue
+    const idx = bases.indexOf(s.source)
+    if (idx === -1) continue
+    if (!idsByIndex.has(idx)) idsByIndex.set(idx, [])
+    idsByIndex.get(idx).push(s.id)
+  }
+
   // 如果没有配置多个 API bases，使用原来的单连接方式
   if (bases.length === 0) {
+    const allIds = servers.value.map(s => s.id).filter(Boolean)
     liveSockets = [createLiveSocket('all', {
       replay: false,
       onMessage: queueLiveMessage,
       onStatus: ({ connected }) => {
         liveConnected.value = !!connected
       }
-    })]
+    }, 0, allIds)]
     return
   }
 
-  // 为每个 API base 创建独立的 WebSocket 连接
+  // 为每个 API base 创建独立的 WebSocket 连接，只传该 base 的 server IDs
   liveSockets = bases.map((_, index) => {
+    const ids = idsByIndex.get(index) || []
     return createLiveSocket('all', {
       replay: false,
       onMessage: queueLiveMessage,
@@ -590,7 +602,7 @@ const startLiveSocket = () => {
         const anyConnected = liveSockets.some(s => s && s.isConnected)
         liveConnected.value = anyConnected
       }
-    }, index)
+    }, index, ids)
   })
 }
 
@@ -725,10 +737,10 @@ const goToServer = (server) => {
   router.push(getServerLink(server))
 }
 
-onMounted(() => {
+onMounted(async () => {
   const savedView = localStorage.getItem('monitor_preferred_view') || 'card'
   currentView.value = savedView
-  refreshData()
+  await refreshData()
   startLiveSocket()
 
   // 每秒更新 now 变量，使相对时间实时刷新

@@ -102,11 +102,15 @@ Headers: (可选) X-Turnstile-Token / X-Turnstile-Verified
 
 ```json
 {
+  "version": "V2.7.5",
+  "is_public": true,
+  "authorization": true,
   "turnstile_enabled": true,
   "turnstile_site_key": "1x00000000000000000000AA",
   "verified": false,
   "turnstile_verified": "BASE64_AES_GCM_ENCRYPTED_STRING_OR_NULL",
-  "show_long_history": true
+  "show_long_history": true,
+  "is_public": true
 }
 ```
 
@@ -114,6 +118,9 @@ Headers: (可选) X-Turnstile-Token / X-Turnstile-Verified
 
 | 字段                   | 类型           | 说明              |
 | -------------------- | ------------ | --------------- |
+| `version`            | string       | 版本号             |
+| `is_public`          | boolean      | 是否公开站点             |
+| `authorization`      | boolean      | 是否通过登录验证       |
 | `turnstile_enabled`  | boolean      | 是否启用人机验证        |
 | `turnstile_site_key` | string       | Turnstile 前端公钥  |
 | `verified`           | boolean      | 当前请求是否已验证       |
@@ -293,13 +300,32 @@ const { columns, rows } = await res.json();
 **Request**
 
 ```
-GET /api/ws?subscribe=<all|serverId>
+GET /api/ws?subscribe=<all|serverId>&ids=<id1,id2,...>
 Headers: Upgrade: websocket, Connection: Upgrade
 ```
 
 **参数**：
 
-- `subscribe`（可选，默认 `all`）：`all` 订阅所有服务器，`<serverId>` 只订阅指定服务器
+| 参数 | 必填 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| `subscribe` | 否 | `all` | `all` 订阅所有服务器，`<serverId>` 只订阅指定服务器 |
+| `ids` | **是**（`subscribe=all` 时） | （空） | 逗号分隔的服务器 ID 列表，仅 `subscribe=all` 时生效。传入后只接收列表中服务器的更新。未传入时不返回任何更新 |
+
+**过滤机制**：
+
+- `subscribe=all` + 传入 `ids`：仅接收 ID 在列表中的服务器更新
+- `subscribe=all` + 未传 `ids`：**不返回任何更新**
+- `subscribe=<serverId>`：始终只接收该服务器更新，`ids` 参数无效
+
+**多 apiBase 注意事项**：
+
+当配置了多个 `apiBase` 时，前端会为每个 apiBase 创建独立的 WebSocket 连接。每个连接的 `ids` 参数应只包含该 apiBase 返回的服务器 ID，而非全部服务器 ID。每个 Worker/DO 只知道自己的服务器，传入不属于它的 ID 不会产生任何效果。
+
+**推荐流程**：
+
+1. 调用 `GET /api/servers` 获取服务器列表（已按登录状态过滤隐藏服务器）
+2. 提取返回的 `servers[].id` 数组
+3. 连接 WebSocket 时将 ID 列表传入 `ids` 参数：`?subscribe=all&ids=id1,id2,id3`
 
 **推送策略**：
 
@@ -310,22 +336,28 @@ Headers: Upgrade: websocket, Connection: Upgrade
 
 **消息格式**：
 
-| 类型            | 方向    | 数据结构                                                                   |
-| ------------- | ----- | ---------------------------------------------------------------------- |
-| `hello`       | S → C | `{ type: "hello", ts: number, subscribed: string }`                    |
-| `ping`        | C → S | `{ type: "ping", ts: number }`                                         |
-| `pong`        | 双向    | `{ type: "pong", ts: number }`                                         |
-| `update`      | S → C | `{ type: "update", serverId: string, ts: number, data: Server }`       |
+| 类型 | 方向 | 数据结构 |
+| --- | --- | --- |
+| `hello` | S → C | `{ type: "hello", ts: number, subscribed: string }` |
+| `ping` | C → S | `{ type: "ping", ts: number }` |
+| `pong` | 双向 | `{ type: "pong", ts: number }` |
+| `update` | S → C | `{ type: "update", serverId: string, ts: number, data: Server }` |
 | `batchUpdate` | S → C | `{ type: "batchUpdate", ts: number, updates: Array<{serverId, ts, data}> }` |
 
-**示例（subscribe=all，批量推送）**：
+**示例（subscribe=all，带 ID 过滤）**：
 
 ```js
-const ws = new WebSocket('wss://status.example.com/api/ws?subscribe=all');
+// 1. 获取服务器列表
+const { servers } = await (await fetch('/api/servers')).json();
+const ids = servers.map(s => s.id);
+
+// 2. 连接 WebSocket，只接收这些服务器的更新
+const ws = new WebSocket(
+  `wss://status.example.com/api/ws?subscribe=all&ids=${encodeURIComponent(ids.join(','))}`
+);
 ws.onmessage = (ev) => {
   const msg = JSON.parse(ev.data);
   if (msg.type === 'batchUpdate') {
-    // 批量更新：遍历 updates 数组
     for (const u of msg.updates) {
       updateServer(u.serverId, u.data);
     }
@@ -474,11 +506,12 @@ interface Settings {
 }
 
 interface WsMessage {
-  type: 'hello' | 'ping' | 'pong' | 'update';
+  type: 'hello' | 'ping' | 'pong' | 'update' | 'batchUpdate';
   ts?: number;
   subscribed?: string;
   serverId?: string;
   data?: Server;
+  updates?: Array<{ serverId: string; ts: number; data: Server }>;
 }
 ```
 
