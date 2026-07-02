@@ -1,7 +1,6 @@
 import { checkAuth, simpleAuthResponse, validateCredentials, generateToken } from '../middleware/auth.js';
 import { getLatestMetricsForAllServers } from '../database/schema.js';
-import { getAllServers } from '../utils/cache.js';
-import { clearServersListCache, clearServerDetailCache } from '../utils/cache.js';
+import { getAllServers, clearServersListCache, clearServerDetailCache } from '../utils/cache.js';
 import { clearSiteSettingsCache, saveSiteOptions } from '../utils/settings.js';
 import { mergeMetricsIntoServer } from '../utils/metrics.js';
 import { verifyTurnstileToken, hashPassword } from '../utils/common.js';
@@ -16,9 +15,54 @@ function isValidName(name) {
   return name && typeof name === 'string' && name.trim().length > 0 && name.length <= 100;
 }
 
-const D1_DAILY_READ_LIMIT = 5000000;
-const D1_DAILY_WRITE_LIMIT = 100000;
-const WORKERS_DAILY_REQUEST_LIMIT = 100000;
+async function deleteServer(db, id) {
+  // helper：安全执行 SQL（不抛错或按需判断）
+  const exec = async (sql, bind = []) => {
+    try {
+      return await db.prepare(sql).bind(...bind).run();
+    } catch (err) {
+      return err;
+    }
+  };
+
+  // 1. 先删 servers（fast path）
+  try {
+    await exec('DELETE FROM servers WHERE id = ?', [id]);
+    console.log('✅ servers 删除成功（fast path）');
+    return { success: true, step: 1 };
+  } catch (err) {
+    // 只有 FOREIGN KEY 才进入 fallback
+    if (!err.message?.includes('FOREIGN KEY constraint failed')) {
+      throw err;
+    }
+  }
+
+  // 3. 删除 old 表（可能不存在）
+  await exec('DELETE FROM metrics_history_old WHERE server_id = ?', [id]);
+
+  // 4. 再试一次删除 servers
+  try {
+    await exec('DELETE FROM servers WHERE id = ?', [id]);
+    console.log('✅ servers 删除成功（after old cleanup）');
+    return { success: true, step: 4 };
+  } catch (err) {
+    if (!err.message?.includes('FOREIGN KEY constraint failed')) {
+      throw err;
+    }
+  }
+
+  // 5. 删除新表（可能不存在）
+  await exec('DELETE FROM metrics_history WHERE server_id = ?', [id]);
+
+  // 6. 最终兜底删除
+  try {
+    await exec('DELETE FROM servers WHERE id = ?', [id]);
+    console.log('✅ servers 删除成功（final fallback）');
+    return { success: true, step: 6 };
+  } catch (err) {
+    throw err;
+  }
+}
 
 function normalizeInterval(value, fallback, min = 1, max = 86400) {
   const num = parseInt(value, 10);
@@ -370,8 +414,7 @@ export async function handleAdminAPI(request, env, sys) {
         return createBadRequestResponse('invalidServerId');
       }
       
-      await env.DB.prepare('DELETE FROM metrics_history WHERE server_id = ?').bind(id).run();
-      await env.DB.prepare('DELETE FROM servers WHERE id = ?').bind(id).run();
+      await deleteServer(env.DB, id);
       
       clearServersListCache();
       clearServerDetailCache(id);
@@ -460,9 +503,9 @@ export async function handleAdminAPI(request, env, sys) {
         }
       }
       
-      const placeholders = ids.map(() => '?').join(',');
-      await env.DB.prepare(`DELETE FROM metrics_history WHERE server_id IN (${placeholders})`).bind(...ids).run();
-      await env.DB.prepare(`DELETE FROM servers WHERE id IN (${placeholders})`).bind(...ids).run();
+      for (const id of ids) {
+        await deleteServer(env.DB, id);
+      }
       
       clearServersListCache();
       for (const id of ids) {

@@ -80,8 +80,7 @@ export async function initDatabase(db) {
         ip_v6 TEXT DEFAULT '0',
         boot_time TEXT DEFAULT '',
         net_rx_monthly REAL DEFAULT 0,
-        net_tx_monthly REAL DEFAULT 0,
-        FOREIGN KEY (server_id) REFERENCES servers(id)
+        net_tx_monthly REAL DEFAULT 0
       )
     `).run();
 
