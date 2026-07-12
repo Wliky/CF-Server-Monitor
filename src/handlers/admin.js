@@ -289,11 +289,17 @@ export async function handleAdminAPI(request, env, sys, loadFullSettings = null)
       });
     }
     else if (data.action === 'd1_usage') {
+      const hasCloudflareToken = Object.prototype.hasOwnProperty.call(data, 'cloudflare_token');
+      const hasCloudflareAccountId = Object.prototype.hasOwnProperty.call(data, 'cloudflare_account_id');
+      const cloudflareToken = hasCloudflareToken ? data.cloudflare_token : (sys?.cloudflare_token || '');
+      const cloudflareAccountId = hasCloudflareAccountId ? data.cloudflare_account_id : (sys?.cloudflare_account_id || '');
+
       try {
-        const usage = await getD1DailyUsage(sys.cloudflare_token || '', sys.cloudflare_account_id || '');
+        const usage = await getD1DailyUsage(String(cloudflareToken || '').trim(), String(cloudflareAccountId || '').trim());
         return createSuccessResponse({
           success: true,
-          usage
+          usage,
+          message: 'd1UsageQueried'
         });
       } catch (e) {
         return createBadRequestResponse(e.message);

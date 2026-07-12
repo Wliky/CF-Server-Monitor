@@ -329,7 +329,7 @@
                 </div>
                 <div class="form-row">
                   <div class="form-group flex-1">
-                    <button @click="sendTestNotification" class="btn btn-primary" :disabled="testNotificationLoading">{{ testNotificationLoading ? '⏳' : '📨' }} {{ trans.sendTestNotification }}</button>
+                    <button type="button" @click="sendTestNotification" class="btn btn-primary" :disabled="testNotificationLoading">{{ testNotificationLoading ? '⏳' : '📨' }} {{ trans.sendTestNotification }}</button>
                   </div>
                 </div>
               </div>
@@ -417,7 +417,7 @@
 
               <div class="form-row">
                 <div class="form-group  flex-1">
-                  <button @click="queryD1Usage" class="btn btn-primary btn-lg" :disabled="d1UsageLoading">{{ d1UsageLoading ? '⏳' : '🔍' }} {{ trans.queryD1Quota }}</button>
+                  <button type="button" @click="queryD1Usage" class="btn btn-primary btn-lg" :disabled="d1UsageLoading">{{ d1UsageLoading ? '⏳' : '🔍' }} {{ trans.queryD1Quota }}</button>
                 </div>
                 <div class="form-group  flex-1">
                   <p class="text-muted text-sm mt-2">
@@ -878,6 +878,9 @@
           </div>
 
           <div v-if="d1UsageResult.success" class="mb-4">
+            <div class="warning-box mb-4">
+              {{ getMessage(d1UsageResult.message) || trans.d1UsageQueried }}
+            </div>
             <div class="quota-section">
               <div class="quota-section-title">{{ trans.todayUsage }}</div>
               <div class="quota-progress-list">
@@ -1966,16 +1969,21 @@ const queryD1Usage = async () => {
   if (d1UsageLoading.value) return
   d1UsageLoading.value = true
   d1UsageResult.value = null
+  alertMessage.value = null
 
   try {
-    const result = await adminApiForSite({ action: 'd1_usage' })
+    const result = await adminApiForSite({
+      action: 'd1_usage',
+      cloudflare_account_id: settings.value.cloudflare_account_id,
+      cloudflare_token: settings.value.cloudflare_token
+    })
     if (!result.error) {
       d1UsageResult.value = result.data
     } else {
-      d1UsageResult.value = { success: false, error: result.error || 'Fail' }
+      alertMessage.value = getMessage(result.error) || result.error || trans.value.operationFailed
     }
   } catch (e) {
-    d1UsageResult.value = { success: false, error: e.message }
+    alertMessage.value = getMessage(e.message) || e.message || trans.value.operationFailed
   } finally {
     d1UsageLoading.value = false
   }
