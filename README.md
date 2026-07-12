@@ -1,22 +1,20 @@
 # [CF-Server-Monitor](https://github.com/huilang-me/CF-Server-Monitor)
 
-一个基于 Cloudflare Workers + D1 + Durable Objects 的多服务器监控探针系统，支持实时监控、历史数据查看、延迟追踪、地图展示等功能。兼容主流Linux系统，Alpine Linux，OpenWrt，Windows系统。**演示地址**：<https://demo.huilang.me/>
+一个基于 Cloudflare Workers + D1 + Durable Objects 的多服务器监控探针系统，支持实时监控、历史数据查看、延迟追踪、地图展示等功能。兼容主流Linux系统，Alpine Linux，OpenWrt，Windows系统。
+
+**演示地址**：<https://demo.huilang.me/>
 
 **当前版本：V2.7.9**
 
-> [!IMPORTANT]
-> **🚨 紧急安全/性能更新 (v2.7.8)**
-> 
-> 本次版本修复了 **月度任务导致数据表索引丢失** 的严重 Bug。该问题影响 **v2.7.0 ~ v2.7.7** 所有版本。
-> 
-> ⚠️ **潜在影响**：此 Bug 会严重增加 D1 读行消耗，**可能导致免费额度超限，造成服务不可用**。
-> 
-> **👉 请所有用户务必立即升级！**
+> [!NOTE]
+> 升级到 V2.7.9 后请重新安装一次探针，之后在后台修改服务器参数会自动下发，无需每次重新安装探针，最长约 240 秒生效。
+>
+>不升级将无法使用服务器参数下发功能。
 
 <details>
 <summary>更新记录</summary>
 
-- V2.7.9 修改数据库结构，减少一半D1写入消耗，理论上支持60+服务器监控，在保证安全的基础上，增加服务器参数下发功能
+- V2.7.9 修改数据库结构，减少一半D1写入消耗，理论上支持60+服务器监控，在保证安全的基础上，增加服务器参数下发功能。
 - V2.7.8 修复月度任务导致数据表索引丢失的严重 Bug
 - V2.7.7 添加GitHub Page部署支持，添加飞书，Bark通知支持
 - V2.7.6 添加多站点支持包括验证码登录等，添加Windows PowerShell无依赖安装脚本，一些安全优化
@@ -361,6 +359,9 @@ curl -sL https://你的项目.你的子域.workers.dev/install-alpine.sh | sh -s
 # OpenWrt
 curl -sL https://你的项目.你的子域.workers.dev/install-openwrt.sh | sh -s install
 ```
+
+> **V2.7.9 说明**：升级到 V2.7.9 后，请重新安装一次探针以启用参数下发能力。之后在后台修改服务器参数会自动下发到探针，无需每次重新安装；受上报间隔和缓存影响，最长约 240 秒才能看到效果。
+
 为了安全，没有提供自动升级功能，如有需要自行将升级脚本加入服务器定时任务。
 
 比如 crontab -e 中添加以下内容，每天凌晨 0 点执行升级：
@@ -828,5 +829,4 @@ MIT License
 - [Vite](https://vitejs.dev/)
 - [Chart.js](https://www.chartjs.org/)
 - [Leaflet](https://leafletjs.com/)
-- 感谢 [LINUX DO](https://linux.do/) [NodeSeek](https://www.nodeseek.com/post-763025-1) 社区的支持与推广
-
+- 感谢 [NodeSeek](https://www.nodeseek.com/post-763025-1)  [LINUX DO](https://linux.do/) 社区的支持与推广
